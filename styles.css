@@ -1,8 +1,63 @@
-/*
+.journal-chat-message-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: calc(100% - 40px);
+    padding: 10px;
+    border-radius: 5px;
+    overflow-y: auto;
+    margin-bottom: 40px;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.journal-chat-message {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    border-radius: 5px;
+    color: white;
+    user-select: text;
+    /* Allow text selection */
+}
 
-If your plugin does not need CSS, delete this file.
+.journal-chat-message strong {
+    margin-bottom: 4px;
+    font-weight: bold;
+}
 
-*/
+.journal-chat-message:nth-child(odd) {
+    align-self: flex-end;
+    background-color: #0a373d;
+}
+
+.journal-chat-message:nth-child(even) {
+    align-self: flex-start;
+    background-color: #19551b;
+}
+
+.journal-chat-input-container {
+    position: absolute;
+    bottom: 0;
+    left: 10px;
+    right: 10px;
+    margin: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.journal-chat-input {
+    flex-grow: 1;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #383838;
+    box-sizing: border-box;
+    background-color: transparent;
+}
+
+.journal-chat-clear-button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
