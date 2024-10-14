@@ -4,8 +4,8 @@
     "version": "0.0.1",
     "minAppVersion": "0.15.0",
     "description": "Chat with your Journals / Daily notes with Ollama",
-    "author": "kallesi",
+    "author": "Kalle Sipila",
     "authorUrl": "https://www.github.com/kallesi",
     "fundingUrl": "https://www.github.com/kallesi",
-    "isDesktopOnly": false
+    "isDesktopOnly": true
 }
