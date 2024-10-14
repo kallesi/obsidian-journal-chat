@@ -1,5 +1,6 @@
 # Journal Chat Plugin
 
+![Screenshot](screenshot.png)
 
 ### Overview
 
