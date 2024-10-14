@@ -7,7 +7,11 @@ async function parseDateRange(dateInput: string) {
 
 	if (parsedDates.length > 0) {
 		const startDate = parsedDates[0].start.date();
-		const endDate = parsedDates[0].end ? parsedDates[0].end.date() : startDate;
+		startDate.setHours(0, 0, 0, 0); // Midnight of the start day
+
+		const endDate = parsedDates[0].end ? parsedDates[0].end.date() : new Date(startDate);
+		endDate.setHours(23, 59, 59, 999); // End of the day
+
 		return { startDate, endDate };
 	} else {
 		console.log("No valid date found.");
@@ -20,6 +24,7 @@ export async function getNotes(vault: Vault, settings: JournalChatSettings, inpu
 	const notes = unfilteredNotes?.filter((note): note is TFile => note instanceof TFile);
 	const matchingNotes: TFile[] = [];
 	const dateRange = await parseDateRange(input);
+
 	if (dateRange && notes) {
 		const { startDate, endDate } = dateRange;
 		notes.forEach((note) => {

@@ -59,7 +59,7 @@ export class ChatbotView extends ItemView {
 
 		const stopButton = inputContainer.createEl("button", {
 			text: "Stop",
-			cls: "journal-chat-stop-button", // Use the same class for consistent styling
+			cls: "journal-chat-stop-button",
 		});
 
 		stopButton.addEventListener("click", () => {
