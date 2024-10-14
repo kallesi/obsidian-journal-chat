@@ -1,11 +1,11 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
+
 import {
 	JournalChatSettingsTab,
 	JournalChatSettings,
 	DEFAULT_SETTINGS,
-} from "settings";
-
-import { ChatbotView, VIEW_TYPE_CHATBOT } from "chat";
+} from "src/settings";
+import { ChatbotView, VIEW_TYPE_CHATBOT } from "src/chat";
 
 export default class JournalChatPlugin extends Plugin {
 	settings: JournalChatSettings;

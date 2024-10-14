@@ -1,6 +1,7 @@
 import { TAbstractFile, TFile, Vault } from "obsidian";
 import * as chrono from "chrono-node";
-import { JournalChatSettings } from 'settings';
+
+import { JournalChatSettings } from 'src/settings';
 
 async function parseDateRange(dateInput: string) {
 	const parsedDates = chrono.parse(dateInput);

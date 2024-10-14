@@ -1,8 +1,9 @@
 import { IconName, ItemView, Notice, WorkspaceLeaf } from "obsidian";
-import JournalChatPlugin from "./main";
 import ollama from "ollama";
-import { getNotes } from "getNotes";
 import { Remarkable } from "remarkable";
+
+import JournalChatPlugin from "src/main";
+import { getNotes } from "src/getNotes";
 
 type Message = {
 	role: string;

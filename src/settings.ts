@@ -1,6 +1,7 @@
-import JournalChatPlugin from "./main";
 import { App, PluginSettingTab, Setting } from "obsidian";
 import { Remarkable } from "remarkable";
+
+import JournalChatPlugin from "src/main";
 
 export interface JournalChatSettings {
 	model: string;
