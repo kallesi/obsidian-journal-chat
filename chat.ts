@@ -139,7 +139,8 @@ export class ChatbotView extends ItemView {
 					} else if (message.trim().startsWith("/context")) {
 						const notesData = await getNotes(
 							this.app.vault,
-							message.replace("/context", "")
+                            this.plugin.settings,
+							message.replace("/context", ""),
 						);
 
 						if (notesData) {

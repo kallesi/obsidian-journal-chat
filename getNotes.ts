@@ -1,5 +1,6 @@
 import { TAbstractFile, TFile, Vault } from "obsidian";
 import * as chrono from "chrono-node";
+import { JournalChatSettings } from 'settings';
 
 async function parseDateRange(dateInput: string) {
 	const parsedDates = chrono.parse(dateInput);
@@ -14,8 +15,8 @@ async function parseDateRange(dateInput: string) {
 	}
 }
 
-export async function getNotes(vault: Vault, input: string): Promise<{ combinedText: string, startDate: string, endDate: string } | null> {
-	const unfilteredNotes: TAbstractFile[] | undefined = vault.getFolderByPath("Journal")?.children;
+export async function getNotes(vault: Vault, settings: JournalChatSettings, input: string): Promise<{ combinedText: string, startDate: string, endDate: string } | null> {
+	const unfilteredNotes: TAbstractFile[] | undefined = vault.getFolderByPath(settings.journalPath)?.children;
 	const notes = unfilteredNotes?.filter((note): note is TFile => note instanceof TFile);
 	const matchingNotes: TFile[] = [];
 	const dateRange = await parseDateRange(input);
