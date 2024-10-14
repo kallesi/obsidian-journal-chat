@@ -1,4 +1,4 @@
-import { ItemView, Notice, WorkspaceLeaf } from "obsidian";
+import { IconName, ItemView, Notice, WorkspaceLeaf } from "obsidian";
 import JournalChatPlugin from "./main";
 import ollama from "ollama";
 import { getNotes } from "getNotes";
@@ -14,11 +14,17 @@ export const VIEW_TYPE_CHATBOT = "chatbot-view";
 export class ChatbotView extends ItemView {
 	plugin: JournalChatPlugin;
 	messages: Message[];
+	icon: IconName;
+	commands: string[];
+	isStreaming: boolean; // Track streaming status
 
 	constructor(leaf: WorkspaceLeaf, plugin: JournalChatPlugin) {
 		super(leaf);
 		this.plugin = plugin;
 		this.messages = [];
+		this.icon = "message-circle";
+		this.commands = ["/c", "/clear", "/context", "/stop"];
+		this.isStreaming = false; // Initialize streaming status
 	}
 
 	getViewType() {
@@ -26,7 +32,7 @@ export class ChatbotView extends ItemView {
 	}
 
 	getDisplayText() {
-		return "Chatbot";
+		return "Journal Chat";
 	}
 
 	async onOpen() {
@@ -43,22 +49,76 @@ export class ChatbotView extends ItemView {
 
 		const input = inputContainer.createEl("input", {
 			type: "text",
-			placeholder: "Type a message...",
+			placeholder: "Type a message or / for command",
 			cls: "journal-chat-input",
 		});
 
-		const clearButton = inputContainer.createEl("button", {
-			text: "Clear",
-			cls: "journal-chat-clear-button",
+		const suggestionBox = inputContainer.createDiv({
+			cls: "journal-chat-suggestion-box",
 		});
 
-		clearButton.addEventListener("click", () => {
-			this.messages = [];
-			messageContainer.empty();
+		const stopButton = inputContainer.createEl("button", {
+			text: "Stop",
+			cls: "journal-chat-stop-button", // Use the same class for consistent styling
+		});
+
+		stopButton.addEventListener("click", () => {
+			if (this.isStreaming) {
+				ollama.abort(); // Stop the stream
+				new Notice("Streaming stopped.", 5000);
+				this.isStreaming = false;
+			}
+		});
+
+		input.addEventListener("input", () => {
+			const value = input.value.trim();
+			suggestionBox.empty();
+			if (value.startsWith("/")) {
+				const suggestions = this.commands.filter((command) =>
+					command.startsWith(value)
+				);
+				if (suggestions.length > 0) {
+					suggestionBox.style.display = "block";
+					suggestions.forEach((suggestion) => {
+						const suggestionItem = suggestionBox.createDiv({
+							text: suggestion,
+							cls: "journal-chat-suggestion-item",
+						});
+						suggestionItem.addEventListener("click", () => {
+							input.value = suggestion;
+							suggestionBox.empty();
+							suggestionBox.style.display = "none";
+						});
+					});
+				} else {
+					suggestionBox.style.display = "none";
+				}
+			} else {
+				suggestionBox.style.display = "none";
+			}
+		});
+
+		input.addEventListener("keydown", (event) => {
+			if (
+				event.key === "Tab" &&
+				suggestionBox.style.display === "block"
+			) {
+				event.preventDefault();
+				const firstSuggestion = suggestionBox.querySelector(
+					".journal-chat-suggestion-item"
+				);
+				if (firstSuggestion) {
+					input.value = firstSuggestion.textContent || "";
+					suggestionBox.empty();
+					suggestionBox.style.display = "none";
+				}
+			}
 		});
 
 		input.addEventListener("keypress", async (event) => {
 			if (event.key === "Enter") {
+				suggestionBox.empty();
+				suggestionBox.style.display = "none"; // Hide the suggestion box
 				const message = input.value;
 
 				if (message.trim()) {
@@ -69,34 +129,63 @@ export class ChatbotView extends ItemView {
 						messageContainer.empty();
 						input.value = "";
 						this.messages = [];
+					} else if (message.trim() === "/stop") {
+						if (this.isStreaming) {
+							ollama.abort(); // Stop the stream
+							new Notice("Streaming stopped.", 5000);
+							this.isStreaming = false;
+							input.value = "";
+						}
 					} else if (message.trim().startsWith("/context")) {
-						const notesString = await getNotes(
+						const notesData = await getNotes(
 							this.app.vault,
 							message.replace("/context", "")
 						);
-						let context = "";
-						if (notesString.length > 0) {
-							context = `These are my journals from this time period:
-                        ${notesString}
-                        ---
-                        Answer my questions about my journals above, and do not provide any opinions of your own.`;
+
+						if (notesData) {
+							const { combinedText, startDate, endDate } =
+								notesData;
+							const context = `These are my journals from this time period:
+							${combinedText}
+							---
+							Answer my questions about my journals above, and do not provide any opinions of your own.`;
+
+							const userContextMessage = {
+								role: "user",
+								content: context,
+							};
+							const assistantContextMessage = {
+								role: "assistant",
+								content: `I understand these are your journals, and that I have your explicit consent to read through them.
+									I will keep anything in this conversation confidential, between us two only.         
+									I will answer your question and your question only, without any unwanted details.
+									Please ask me anything about them, and I will do my best to help you.`,
+							};
+
+							if (
+								this.messages.length >= 2 &&
+								this.messages[0].content.startsWith(
+									"These are my journals"
+								)
+							) {
+								// Replace existing context
+								this.messages[0] = userContextMessage;
+								this.messages[1] = assistantContextMessage;
+							} else {
+								// Insert new context
+								this.messages.unshift(assistantContextMessage);
+								this.messages.unshift(userContextMessage);
+							}
+
+							input.value = "";
+							new Notice(
+								`Successfully added journals from ${startDate} to ${endDate} with ${context.length} characters`,
+								10000
+							);
+							console.log(this.messages);
+						} else {
+							new Notice("No valid date range found.", 5000);
 						}
-						this.messages[0] = {
-							role: "user",
-							content: context,
-						};
-						this.messages[1] = {
-							role: "assistant",
-							content: `I understand these are your journals, and that I have your explicit consent to read through them.
-                                    I will keep anything in this conversation confidential, between us two only.         
-                                    I will answer your question and your question only, without any unwanted details.
-                                    Please ask me anything about them, and I will do my best to help you.`,
-						};
-						input.value = "";
-						new Notice(
-							`Successfully added journals of ${context.length} characters`,
-							10000
-						);
 					} else {
 						this.addMessage(messageContainer, "User", message);
 						input.value = "";
@@ -104,43 +193,12 @@ export class ChatbotView extends ItemView {
 						const thinkingMessage = this.addMessage(
 							messageContainer,
 							"Chatbot",
-							"..."
+							""
 						);
-						let dots = "...";
-						const interval = setInterval(() => {
-							dots = dots.length < 5 ? dots + "." : ".";
-							if (thinkingMessage.lastChild) {
-								thinkingMessage.lastChild.textContent = dots;
-							}
-						}, 300);
+						thinkingMessage.classList.add("animated-dots");
 
-						if (this.messages.length === 0) {
-							let notesString;
-							if (this.messages.length === 0) {
-								notesString = await getNotes(
-									this.app.vault,
-									message
-								);
-							} else {
-								notesString = "No notes were found";
-							}
-							const context = `These are my journals from this time period:
-                                            ${notesString}
-                                            ---
-                                            Answer my questions about my journals above, and do not provide any opinions of your own.
-                                            `;
-							this.messages.push({
-								role: "user",
-								content: context,
-							});
-							this.messages.push({
-								role: "assistant",
-								content: `I understand these are your journals, and that I have your explicit consent to read through them.
-                                    I will keep anything in this conversation confidential, between us two only. 
-                                    I will answer your question and your question only, without any unwanted details.
-                                    Please ask me anything about them, and I will do my best to help you.`,
-							});
-						}
+						const md = new Remarkable();
+						let content = "";
 
 						try {
 							this.messages.push({
@@ -148,37 +206,51 @@ export class ChatbotView extends ItemView {
 								content: message,
 							});
 
-							const prompt = this.messages
-								.map((msg) => `${msg.role}: ${msg.content}`)
-								.join("\n");
+							// Stream the response
+							this.isStreaming = true; // Set streaming status
 
-							const response = await ollama.generate({
+							for await (const part of await ollama.generate({
 								model: this.plugin.settings.model,
-								prompt: prompt,
-							});
+								prompt: this.messages
+									.map((msg) => `${msg.role}: ${msg.content}`)
+									.join("\n"),
+								stream: true,
+							})) {
+								if (!this.isStreaming) break; // Stop if streaming is aborted
 
-							clearInterval(interval);
-							thinkingMessage.remove();
+								content += part.response;
+								thinkingMessage.innerHTML = md.render(content);
+								messageContainer.scrollTop =
+									messageContainer.scrollHeight;
+								thinkingMessage.classList.remove(
+									"animated-dots"
+								);
+							}
 
-							this.addMessage(
-								messageContainer,
-								"Chatbot",
-								response.response
-							);
-							this.messages.push({
-								role: "assistant",
-								content: response.response
-							});
+							// Only push the assistant message if streaming wasn't stopped
+							if (this.isStreaming) {
+								this.messages.push({
+									role: "assistant",
+									content: content,
+								});
+							}
+
 							console.log(this.messages);
 						} catch (error) {
-							clearInterval(interval);
 							console.error("Error fetching response:", error);
-							thinkingMessage.remove();
-							this.addMessage(
-								messageContainer,
-								"Chatbot",
-								"Sorry, there was an error processing your request."
-							);
+							if (this.isStreaming) {
+								// Only show error message if not manually stopped
+								thinkingMessage.innerHTML = md.render(
+									"Sorry, there was an error processing your request."
+								);
+								messageContainer.scrollTop =
+									messageContainer.scrollHeight;
+								thinkingMessage.classList.remove(
+									"animated-dots"
+								);
+							}
+						} finally {
+							this.isStreaming = false; // Reset streaming status
 						}
 					}
 				}
@@ -191,9 +263,9 @@ export class ChatbotView extends ItemView {
 		sender: string,
 		text: string
 	): HTMLDivElement {
-		const messageEl = container.createDiv({ cls: "journal-chat-message" });
-		messageEl.createEl("strong", { text: `${sender} ` });
-
+		const messageEl = container.createDiv({
+			cls: "journal-chat-message",
+		});
 		const md = new Remarkable();
 		const htmlContent = md.render(text);
 		const messageContent = messageEl.createDiv();

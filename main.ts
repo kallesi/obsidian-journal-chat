@@ -5,24 +5,33 @@ import {
 	DEFAULT_SETTINGS,
 } from "settings";
 
-import {ChatbotView, VIEW_TYPE_CHATBOT} from 'chat';
+import { ChatbotView, VIEW_TYPE_CHATBOT } from "chat";
 
 export default class JournalChatPlugin extends Plugin {
 	settings: JournalChatSettings;
-
 
 	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new JournalChatSettingsTab(this.app, this));
 
 		// Register chat view
-		this.registerView(VIEW_TYPE_CHATBOT, (leaf) => new ChatbotView(leaf, this));
+		this.registerView(
+			VIEW_TYPE_CHATBOT,
+			(leaf) => new ChatbotView(leaf, this)
+		);
 
-		this.addRibbonIcon("message-circle", "Activate Chatbot", () => {
+		this.addRibbonIcon("message-circle", "Open Journal Chat", () => {
 			this.activateView();
 		});
 
-        
+		// Add command for opening the chat view
+		this.addCommand({
+			id: 'open-journal-chat',
+			name: 'Open',
+			callback: () => {
+				this.activateView();
+			},
+		});
 	}
 
 	// Load / save settings
@@ -50,7 +59,7 @@ export default class JournalChatPlugin extends Plugin {
 		if (leaves.length > 0) {
 			leaf = leaves[0];
 		} else {
-			leaf = workspace.getRightLeaf(false);
+			leaf = workspace.getLeaf(true); // Opens in the main editor
 			await leaf?.setViewState({ type: VIEW_TYPE_CHATBOT, active: true });
 		}
 
@@ -58,10 +67,5 @@ export default class JournalChatPlugin extends Plugin {
 		workspace.revealLeaf(leaf!);
 	}
 
-    // Load daily notes
-    
-    
-
-
-
+	// Load daily notes
 }

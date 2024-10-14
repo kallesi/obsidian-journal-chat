@@ -6,9 +6,7 @@ async function parseDateRange(dateInput: string) {
 
 	if (parsedDates.length > 0) {
 		const startDate = parsedDates[0].start.date();
-		const endDate = parsedDates[0].end
-			? parsedDates[0].end.date()
-			: startDate;
+		const endDate = parsedDates[0].end ? parsedDates[0].end.date() : startDate;
 		return { startDate, endDate };
 	} else {
 		console.log("No valid date found.");
@@ -16,13 +14,9 @@ async function parseDateRange(dateInput: string) {
 	}
 }
 
-
-export async function getNotes(vault: Vault, input: string): Promise<string> {
-	const unfilteredNotes: TAbstractFile[] | undefined =
-		vault.getFolderByPath("Journal")?.children;
-	const notes = unfilteredNotes?.filter(
-		(note): note is TFile => note instanceof TFile
-	);
+export async function getNotes(vault: Vault, input: string): Promise<{ combinedText: string, startDate: string, endDate: string } | null> {
+	const unfilteredNotes: TAbstractFile[] | undefined = vault.getFolderByPath("Journal")?.children;
+	const notes = unfilteredNotes?.filter((note): note is TFile => note instanceof TFile);
 	const matchingNotes: TFile[] = [];
 	const dateRange = await parseDateRange(input);
 	if (dateRange && notes) {
@@ -48,7 +42,6 @@ export async function getNotes(vault: Vault, input: string): Promise<string> {
 
 	let combinedText = '';
 
-	// Use Promise.all to ensure all read operations are complete
 	await Promise.all(
 		matchingNotes.map((note) =>
 			vault.read(note)
@@ -66,11 +59,18 @@ export async function getNotes(vault: Vault, input: string): Promise<string> {
 	);
 
 	console.log(`${combinedText.slice(0, 150)}...`);
-    console.log(`Length: ${combinedText.length} characters`);
-    if (combinedText.length > 128000) {
-        combinedText = combinedText.slice(0, 128000);
-        console.log("Text too long, trimmed to 128,000 characters for performance");
-    }
+	console.log(`Length: ${combinedText.length} characters`);
+	if (combinedText.length > 128000) {
+		combinedText = combinedText.slice(0, 128000);
+		console.log("Text too long, trimmed to 128,000 characters for performance");
+	}
 
-	return combinedText;
+	if (dateRange) {
+		return {
+			combinedText,
+			startDate: dateRange.startDate.toLocaleDateString('en-US'),
+			endDate: dateRange.endDate.toLocaleDateString('en-US')
+		};
+	}
+	return null;
 }
