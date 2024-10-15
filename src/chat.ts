@@ -244,7 +244,7 @@ export class ChatbotView extends ItemView {
     
                                 const isNearBottom =
                                     messageContainer.scrollHeight - messageContainer.scrollTop <=
-                                    messageContainer.clientHeight + 20; // 100px buffer
+                                    messageContainer.clientHeight + 50;
     
                                 if (isNearBottom) {
                                     messageContainer.scrollTop = messageContainer.scrollHeight;
