@@ -1,4 +1,11 @@
-import { IconName, ItemView, Notice, WorkspaceLeaf, MarkdownRenderer, Component } from "obsidian";
+import {
+	IconName,
+	ItemView,
+	Notice,
+	WorkspaceLeaf,
+	MarkdownRenderer,
+	Component,
+} from "obsidian";
 import ollama from "ollama";
 import JournalChatPlugin from "src/main";
 import { getNotes } from "src/getNotes";
@@ -66,34 +73,47 @@ export class ChatbotView extends ItemView {
 				ollama.abort();
 				new Notice("Streaming stopped.", 5000);
 				this.isStreaming = false;
+
+				// Remove animation from the thinking message if it's there
+				const thinkingMessage =
+					messageContainer.querySelector(".animated-dots");
+				if (thinkingMessage) {
+					thinkingMessage.removeClass("animated-dots");
+				}
 			}
 		});
 
 		input.addEventListener("input", () => {
 			const value = input.value.trim();
 			suggestionBox.empty();
-			const hasSuggestions = value.startsWith("/") && this.commands.some(command => command.startsWith(value));
+			const hasSuggestions =
+				value.startsWith("/") &&
+				this.commands.some((command) => command.startsWith(value));
 			suggestionBox.toggleClass("visible", hasSuggestions);
 
 			if (hasSuggestions) {
-				this.commands.filter(command => command.startsWith(value)).forEach(suggestion => {
-					const suggestionItem = suggestionBox.createEl("div", {
-						text: suggestion,
-						cls: "journal-chat-suggestion-item",
+				this.commands
+					.filter((command) => command.startsWith(value))
+					.forEach((suggestion) => {
+						const suggestionItem = suggestionBox.createEl("div", {
+							text: suggestion,
+							cls: "journal-chat-suggestion-item",
+						});
+						suggestionItem.addEventListener("click", () => {
+							input.value = suggestion;
+							suggestionBox.empty();
+							suggestionBox.removeClass("visible");
+						});
 					});
-					suggestionItem.addEventListener("click", () => {
-						input.value = suggestion;
-						suggestionBox.empty();
-						suggestionBox.removeClass("visible");
-					});
-				});
 			}
 		});
 
 		input.addEventListener("keydown", (event) => {
 			if (event.key === "Tab" && suggestionBox.hasClass("visible")) {
 				event.preventDefault();
-				const firstSuggestion = suggestionBox.querySelector(".journal-chat-suggestion-item");
+				const firstSuggestion = suggestionBox.querySelector(
+					".journal-chat-suggestion-item"
+				);
 				if (firstSuggestion) {
 					input.value = firstSuggestion.textContent || "";
 					suggestionBox.empty();
@@ -109,7 +129,10 @@ export class ChatbotView extends ItemView {
 				const message = input.value;
 
 				if (message.trim()) {
-					if (message.trim() === "/c" || message.trim() === "/clear") {
+					if (
+						message.trim() === "/c" ||
+						message.trim() === "/clear"
+					) {
 						messageContainer.empty();
 						input.value = "";
 						this.messages = [];
@@ -119,16 +142,26 @@ export class ChatbotView extends ItemView {
 							new Notice("Streaming stopped.", 5000);
 							this.isStreaming = false;
 							input.value = "";
+
+							// Remove animation from the thinking message if it's there
+							const thinkingMessage =
+								messageContainer.querySelector(
+									".animated-dots"
+								);
+							if (thinkingMessage) {
+								thinkingMessage.removeClass("animated-dots");
+							}
 						}
 					} else if (message.trim().startsWith("/context")) {
 						const notesData = await getNotes(
 							this.app.vault,
 							this.plugin.settings,
-							message.replace("/context", ""),
+							message.replace("/context", "")
 						);
 
 						if (notesData) {
-							const { combinedText, startDate, endDate } = notesData;
+							const { combinedText, startDate, endDate } =
+								notesData;
 							const context = `These are my journals from this time period:
 							${combinedText}
 							---
@@ -214,7 +247,9 @@ export class ChatbotView extends ItemView {
 
 								// Remove animation as soon as content starts coming in
 								if (thinkingMessage.hasClass("animated-dots")) {
-									thinkingMessage.removeClass("animated-dots");
+									thinkingMessage.removeClass(
+										"animated-dots"
+									);
 								}
 
 								await MarkdownRenderer.render(
