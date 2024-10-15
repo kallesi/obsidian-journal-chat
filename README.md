@@ -1,12 +1,16 @@
 # Journal Chat Plugin
 
-![Screenshot](screenshot.png)
+
 
 ### Overview
 
 The Journal Chat Plugin for Obsidian enhances your journaling experience by integrating local AI capabilities. It allows you to explore old memories and conduct enhanced periodic reviews using the Ollama AI model.
 
-Also functions as a vanilla Ollama chatbot frontend within obsidian if you don't provide it any context.
+![Screenshot](screenshot.png)
+
+Also functions as a fully featured Ollama chatbot frontend within obsidian if you don't provide it any context.
+
+![Screehsot 2](Screenshot2.png)
 
 ### Usage Guide
 
