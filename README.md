@@ -33,9 +33,10 @@ Example: \`What was my life like during this period?\`
 
 **Other commands:**
 
-- \`/clear /c\` - Clear chat and context
+- \`/clear\` - Clear chat and context
 - \`/stop\` - Stop generating response
 - \`/model\` - Change Ollama model
+- \`/list\` - List all available Ollama models
 
 
 ### License
