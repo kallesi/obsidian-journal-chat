@@ -130,8 +130,9 @@ export class ChatbotView extends ItemView {
 
 				if (message.trim()) {
 					if (
-						message.trim() === "/c" ||
-						message.trim() === "/clear"
+						(message.trim() === "/c" ||
+						message.trim() === "/clear") &&
+                        !this.isStreaming
 					) {
 						messageContainer.empty();
 						input.value = "";
@@ -150,7 +151,7 @@ export class ChatbotView extends ItemView {
                                 thinkingMessage.removeClass("animated-dots");
                             }
                         }
-					} else if (message.trim().startsWith("/context")) {
+					} else if (message.trim().startsWith("/context") && !this.isStreaming) {
 						const notesData = await getNotes(
 							this.app.vault,
 							this.plugin.settings,
@@ -210,7 +211,7 @@ export class ChatbotView extends ItemView {
 							new Notice("Invalid model name.", 5000);
 							input.value = "";
 						}
-					} else {
+					} else if (!this.isStreaming) {
 						this.addMessage(messageContainer, "User", message);
 						input.value = "";
 
