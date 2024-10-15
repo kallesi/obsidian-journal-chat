@@ -22,7 +22,7 @@ export class ChatbotView extends ItemView {
 		this.plugin = plugin;
 		this.messages = [];
 		this.icon = "message-circle";
-		this.commands = ["/c", "/clear", "/context", "/stop"];
+		this.commands = ["/c", "/clear", "/context", "/stop", "/model"];
 		this.isStreaming = false;
 	}
 
@@ -167,6 +167,16 @@ export class ChatbotView extends ItemView {
 							console.log(this.messages);
 						} else {
 							new Notice("No valid date range found.", 5000);
+						}
+					} else if (message.trim().startsWith("/model")) {
+						const modelName = message.slice(7).trim().split(" ")[0];
+						if (modelName) {
+							this.plugin.settings.model = modelName;
+							await this.plugin.saveSettings();
+							new Notice(`Model changed to ${modelName}.`, 5000);
+							input.value = "";
+						} else {
+							new Notice("Invalid model name.", 5000);
 						}
 					} else {
 						this.addMessage(messageContainer, "User", message);
