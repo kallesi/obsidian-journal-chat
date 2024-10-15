@@ -14,7 +14,7 @@
     flex-direction: column;
     padding: 8px;
     border-radius: 5px;
-    color: white;
+    color: var(--color-text-title);
     user-select: text;
 }
 
@@ -26,7 +26,7 @@
 .journal-chat-message:nth-child(odd) {
     align-self: flex-end;
     max-width: 80%;
-    background-color: var(--background-secondary-alt);
+    background-color: var(--background-secondary);
 }
 
 .journal-chat-message:nth-child(even) {
@@ -49,11 +49,11 @@
     flex-grow: 1;
     padding: 8px;
     border-radius: 5px;
-    border: 1px solid #383838;
+    border: 1px solid;
     box-sizing: border-box;
     background-color: transparent;
     margin-bottom: 30px;
-    color: white;
+    color: var(--color-text-title);
 }
 
 .journal-chat-stop-button {
@@ -62,8 +62,8 @@
     border-radius: 5px;
     cursor: pointer;
     margin-bottom: 30px;
-    background-color: #444;
-    color: white;
+    background-color: var(--color-base-25);
+    color: var(--color-text-title);
     border: none;
 }
 
@@ -73,7 +73,7 @@
     bottom: 70px;
     left: 10px;
     right: 60px;
-    background-color: #2e2e2e;
+    background-color: var(--color-base-25);
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     z-index: 1000;
@@ -89,11 +89,11 @@
 .journal-chat-suggestion-item {
     padding: 8px;
     cursor: pointer;
-    color: white;
+    color: var(--color-text-title);
 }
 
 .journal-chat-suggestion-item:hover {
-    background-color: #444;
+    background-color: var(--color-base-25);
 }
 
 .animated-dots::after {

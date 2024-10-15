@@ -69,19 +69,19 @@ export class ChatbotView extends ItemView {
 		});
 
 		stopButton.addEventListener("click", () => {
-			if (this.isStreaming) {
-				ollama.abort();
-				new Notice("Streaming stopped.", 5000);
-				this.isStreaming = false;
-
-				// Remove animation from the thinking message if it's there
-				const thinkingMessage =
-					messageContainer.querySelector(".animated-dots");
-				if (thinkingMessage) {
-					thinkingMessage.removeClass("animated-dots");
-				}
-			}
-		});
+            if (this.isStreaming) {
+                ollama.abort();
+                new Notice("Streaming stopped.", 5000);
+                this.isStreaming = false;
+        
+                // Remove animation from the thinking message if it's there
+                const thinkingMessage =
+                    messageContainer.querySelector(".animated-dots");
+                if (thinkingMessage) {
+                    thinkingMessage.removeClass("animated-dots");
+                }
+            }
+        });
 
 		input.addEventListener("input", () => {
 			const value = input.value.trim();
@@ -137,21 +137,19 @@ export class ChatbotView extends ItemView {
 						input.value = "";
 						this.messages = [];
 					} else if (message.trim() === "/stop") {
-						if (this.isStreaming) {
-							ollama.abort();
-							new Notice("Streaming stopped.", 5000);
-							this.isStreaming = false;
-							input.value = "";
-
-							// Remove animation from the thinking message if it's there
-							const thinkingMessage =
-								messageContainer.querySelector(
-									".animated-dots"
-								);
-							if (thinkingMessage) {
-								thinkingMessage.removeClass("animated-dots");
-							}
-						}
+                        if (this.isStreaming) {
+                            ollama.abort();
+                            new Notice("Streaming stopped.", 5000);
+                            this.isStreaming = false;
+                            input.value = "";
+                    
+                            // Remove animation from the thinking message if it's there
+                            const thinkingMessage =
+                                messageContainer.querySelector(".animated-dots");
+                            if (thinkingMessage) {
+                                thinkingMessage.removeClass("animated-dots");
+                            }
+                        }
 					} else if (message.trim().startsWith("/context")) {
 						const notesData = await getNotes(
 							this.app.vault,
@@ -272,19 +270,17 @@ export class ChatbotView extends ItemView {
 
 							console.log(this.messages);
 						} catch (error) {
-							console.error("Error fetching response:", error);
-							thinkingMessage.empty(); // Clear the animation
-							thinkingMessage.removeClass("animated-dots"); // Ensure animation class is removed
-							await MarkdownRenderer.render(
-								this.app,
-								"Sorry, there was an error processing your request.",
-								thinkingMessage,
-								"",
-								this
-							);
-							messageContainer.scrollTop =
-								messageContainer.scrollHeight;
-						} finally {
+                            console.error("Error fetching response:", error);
+                            thinkingMessage.removeClass("animated-dots"); // Ensure animation class is removed
+                        
+                            // Create an error message element
+                            thinkingMessage.createEl("div", {
+                                text: "Sorry, there was an error processing your request.",
+                                cls: "error-message"
+                            });
+                        
+                            messageContainer.scrollTop = messageContainer.scrollHeight;
+                        } finally {
 							this.isStreaming = false;
 						}
 					}
