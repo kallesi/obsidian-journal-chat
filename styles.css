@@ -25,12 +25,12 @@
 
 .journal-chat-message:nth-child(odd) {
     align-self: flex-end;
-    background-color: #0a373d;
+    background-color: var(--background-secondary-alt);
 }
 
 .journal-chat-message:nth-child(even) {
     align-self: flex-start;
-    background-color: #19551b;
+    background-color: var(--code-background);
 }
 
 .journal-chat-input-container {

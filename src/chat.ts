@@ -177,6 +177,7 @@ export class ChatbotView extends ItemView {
 							input.value = "";
 						} else {
 							new Notice("Invalid model name.", 5000);
+							input.value = "";
 						}
 					} else {
 						this.addMessage(messageContainer, "User", message);
@@ -203,14 +204,14 @@ export class ChatbotView extends ItemView {
 								model: this.plugin.settings.model,
 								prompt: this.messages
 									.map((msg) => `${msg.role}: ${msg.content}`)
-									.join("\n"),
+									.join("\n\n"),
 								stream: true,
 							})) {
 								if (!this.isStreaming) break;
 
 								content += part.response;
 								thinkingMessage.empty(); // Clear previous content
-								
+
 								// Remove animation as soon as content starts coming in
 								if (thinkingMessage.hasClass("animated-dots")) {
 									thinkingMessage.removeClass("animated-dots");
@@ -237,18 +238,17 @@ export class ChatbotView extends ItemView {
 							console.log(this.messages);
 						} catch (error) {
 							console.error("Error fetching response:", error);
-							if (this.isStreaming) {
-								thinkingMessage.empty();
-								await MarkdownRenderer.render(
-									this.app,
-									"Sorry, there was an error processing your request.",
-									thinkingMessage,
-									"",
-									this
-								);
-								messageContainer.scrollTop =
-									messageContainer.scrollHeight;
-							}
+							thinkingMessage.empty(); // Clear the animation
+							thinkingMessage.removeClass("animated-dots"); // Ensure animation class is removed
+							await MarkdownRenderer.render(
+								this.app,
+								"Sorry, there was an error processing your request.",
+								thinkingMessage,
+								"",
+								this
+							);
+							messageContainer.scrollTop =
+								messageContainer.scrollHeight;
 						} finally {
 							this.isStreaming = false;
 						}
@@ -266,7 +266,7 @@ export class ChatbotView extends ItemView {
 		const messageEl = container.createEl("div", {
 			cls: "journal-chat-message",
 		});
-		
+
 		const messageContent = messageEl.createEl("div");
 		const component = new Component();
 		this.addChild(component);
