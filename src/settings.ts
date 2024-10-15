@@ -1,12 +1,11 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
-import { Remarkable } from "remarkable";
-
+import { App, PluginSettingTab, Setting, MarkdownRenderer } from "obsidian";
 import JournalChatPlugin from "src/main";
 
 export interface JournalChatSettings {
 	model: string;
 	journalPath: string;
 }
+
 export const DEFAULT_SETTINGS: Partial<JournalChatSettings> = {
 	model: "llama3.2:latest",
 	journalPath: "Journal",
@@ -35,18 +34,21 @@ export class JournalChatSettingsTab extends PluginSettingTab {
 		});
 
 		// Add links
-		const githubLink = containerEl.createEl("a", {
+		const linksContainer = containerEl.createDiv({ cls: "links-container" });
+
+		linksContainer.createEl("a", {
 			text: "GitHub",
 			href: "https://github.com/kallesi/obsidian-journal-chat",
+			attr: { target: "_blank" },
 		});
-		githubLink.target = "_blank"; // Open in a new tab
-		containerEl.createEl("span", { text: "   " }); // Space
 
-		const ollamaLink = containerEl.createEl("a", {
+		linksContainer.createEl("span", { text: "   " }); // Space
+
+		linksContainer.createEl("a", {
 			text: "Ollama",
 			href: "https://ollama.com",
+			attr: { target: "_blank" },
 		});
-		ollamaLink.target = "_blank"; // Open in a new tab
 
 		containerEl.createEl("br");
 		containerEl.createEl("br");
@@ -79,9 +81,8 @@ export class JournalChatSettingsTab extends PluginSettingTab {
 					})
 			);
 
-		containerEl.createEl('h4', {text: "Usage Guide"})
+		containerEl.createEl('h4', { text: "Usage Guide" });
 
-		const md = new Remarkable();
 		const markdownContent = `
 **Set up your model.**  
 It is recommended that you use a smaller model (depending on hardware) as this uses the entire context instead of embeddings.
@@ -105,7 +106,8 @@ Example: \`What was my life like during this period?\`
 - \`/clear /c\` - Clear chat and context
 - \`/stop\` - Stop generating response
 `;
-        const description = containerEl.createDiv();
-		description.innerHTML = md.render(markdownContent);
+
+		const description = containerEl.createDiv();
+		MarkdownRenderer.render(this.app, markdownContent, description, "", this.plugin);
 	}
 }

@@ -1,7 +1,5 @@
-import { IconName, ItemView, Notice, WorkspaceLeaf } from "obsidian";
+import { IconName, ItemView, Notice, WorkspaceLeaf, MarkdownRenderer, Component } from "obsidian";
 import ollama from "ollama";
-import { Remarkable } from "remarkable";
-
 import JournalChatPlugin from "src/main";
 import { getNotes } from "src/getNotes";
 
@@ -17,7 +15,7 @@ export class ChatbotView extends ItemView {
 	messages: Message[];
 	icon: IconName;
 	commands: string[];
-	isStreaming: boolean; // Track streaming status
+	isStreaming: boolean;
 
 	constructor(leaf: WorkspaceLeaf, plugin: JournalChatPlugin) {
 		super(leaf);
@@ -25,7 +23,7 @@ export class ChatbotView extends ItemView {
 		this.messages = [];
 		this.icon = "message-circle";
 		this.commands = ["/c", "/clear", "/context", "/stop"];
-		this.isStreaming = false; // Initialize streaming status
+		this.isStreaming = false;
 	}
 
 	getViewType() {
@@ -40,11 +38,11 @@ export class ChatbotView extends ItemView {
 		const container = this.containerEl.children[1] as HTMLElement;
 		container.empty();
 
-		const messageContainer = container.createDiv({
+		const messageContainer = container.createEl("div", {
 			cls: "journal-chat-message-container",
 		});
 
-		const inputContainer = container.createDiv({
+		const inputContainer = container.createEl("div", {
 			cls: "journal-chat-input-container",
 		});
 
@@ -54,7 +52,7 @@ export class ChatbotView extends ItemView {
 			cls: "journal-chat-input",
 		});
 
-		const suggestionBox = inputContainer.createDiv({
+		const suggestionBox = inputContainer.createEl("div", {
 			cls: "journal-chat-suggestion-box",
 		});
 
@@ -65,7 +63,7 @@ export class ChatbotView extends ItemView {
 
 		stopButton.addEventListener("click", () => {
 			if (this.isStreaming) {
-				ollama.abort(); // Stop the stream
+				ollama.abort();
 				new Notice("Streaming stopped.", 5000);
 				this.isStreaming = false;
 			}
@@ -74,44 +72,32 @@ export class ChatbotView extends ItemView {
 		input.addEventListener("input", () => {
 			const value = input.value.trim();
 			suggestionBox.empty();
-			if (value.startsWith("/")) {
-				const suggestions = this.commands.filter((command) =>
-					command.startsWith(value)
-				);
-				if (suggestions.length > 0) {
-					suggestionBox.style.display = "block";
-					suggestions.forEach((suggestion) => {
-						const suggestionItem = suggestionBox.createDiv({
-							text: suggestion,
-							cls: "journal-chat-suggestion-item",
-						});
-						suggestionItem.addEventListener("click", () => {
-							input.value = suggestion;
-							suggestionBox.empty();
-							suggestionBox.style.display = "none";
-						});
+			const hasSuggestions = value.startsWith("/") && this.commands.some(command => command.startsWith(value));
+			suggestionBox.toggleClass("visible", hasSuggestions);
+
+			if (hasSuggestions) {
+				this.commands.filter(command => command.startsWith(value)).forEach(suggestion => {
+					const suggestionItem = suggestionBox.createEl("div", {
+						text: suggestion,
+						cls: "journal-chat-suggestion-item",
 					});
-				} else {
-					suggestionBox.style.display = "none";
-				}
-			} else {
-				suggestionBox.style.display = "none";
+					suggestionItem.addEventListener("click", () => {
+						input.value = suggestion;
+						suggestionBox.empty();
+						suggestionBox.removeClass("visible");
+					});
+				});
 			}
 		});
 
 		input.addEventListener("keydown", (event) => {
-			if (
-				event.key === "Tab" &&
-				suggestionBox.style.display === "block"
-			) {
+			if (event.key === "Tab" && suggestionBox.hasClass("visible")) {
 				event.preventDefault();
-				const firstSuggestion = suggestionBox.querySelector(
-					".journal-chat-suggestion-item"
-				);
+				const firstSuggestion = suggestionBox.querySelector(".journal-chat-suggestion-item");
 				if (firstSuggestion) {
 					input.value = firstSuggestion.textContent || "";
 					suggestionBox.empty();
-					suggestionBox.style.display = "none";
+					suggestionBox.removeClass("visible");
 				}
 			}
 		});
@@ -119,20 +105,17 @@ export class ChatbotView extends ItemView {
 		input.addEventListener("keypress", async (event) => {
 			if (event.key === "Enter") {
 				suggestionBox.empty();
-				suggestionBox.style.display = "none"; // Hide the suggestion box
+				suggestionBox.removeClass("visible");
 				const message = input.value;
 
 				if (message.trim()) {
-					if (
-						message.trim() === "/c" ||
-						message.trim() === "/clear"
-					) {
+					if (message.trim() === "/c" || message.trim() === "/clear") {
 						messageContainer.empty();
 						input.value = "";
 						this.messages = [];
 					} else if (message.trim() === "/stop") {
 						if (this.isStreaming) {
-							ollama.abort(); // Stop the stream
+							ollama.abort();
 							new Notice("Streaming stopped.", 5000);
 							this.isStreaming = false;
 							input.value = "";
@@ -140,13 +123,12 @@ export class ChatbotView extends ItemView {
 					} else if (message.trim().startsWith("/context")) {
 						const notesData = await getNotes(
 							this.app.vault,
-                            this.plugin.settings,
+							this.plugin.settings,
 							message.replace("/context", ""),
 						);
 
 						if (notesData) {
-							const { combinedText, startDate, endDate } =
-								notesData;
+							const { combinedText, startDate, endDate } = notesData;
 							const context = `These are my journals from this time period:
 							${combinedText}
 							---
@@ -170,11 +152,9 @@ export class ChatbotView extends ItemView {
 									"These are my journals"
 								)
 							) {
-								// Replace existing context
 								this.messages[0] = userContextMessage;
 								this.messages[1] = assistantContextMessage;
 							} else {
-								// Insert new context
 								this.messages.unshift(assistantContextMessage);
 								this.messages.unshift(userContextMessage);
 							}
@@ -197,9 +177,8 @@ export class ChatbotView extends ItemView {
 							"Chatbot",
 							""
 						);
-						thinkingMessage.classList.add("animated-dots");
+						thinkingMessage.addClass("animated-dots");
 
-						const md = new Remarkable();
 						let content = "";
 
 						try {
@@ -208,8 +187,7 @@ export class ChatbotView extends ItemView {
 								content: message,
 							});
 
-							// Stream the response
-							this.isStreaming = true; // Set streaming status
+							this.isStreaming = true;
 
 							for await (const part of await ollama.generate({
 								model: this.plugin.settings.model,
@@ -218,18 +196,27 @@ export class ChatbotView extends ItemView {
 									.join("\n"),
 								stream: true,
 							})) {
-								if (!this.isStreaming) break; // Stop if streaming is aborted
+								if (!this.isStreaming) break;
 
 								content += part.response;
-								thinkingMessage.innerHTML = md.render(content);
+								thinkingMessage.empty(); // Clear previous content
+								
+								// Remove animation as soon as content starts coming in
+								if (thinkingMessage.hasClass("animated-dots")) {
+									thinkingMessage.removeClass("animated-dots");
+								}
+
+								await MarkdownRenderer.render(
+									this.app,
+									content,
+									thinkingMessage,
+									"",
+									this
+								);
 								messageContainer.scrollTop =
 									messageContainer.scrollHeight;
-								thinkingMessage.classList.remove(
-									"animated-dots"
-								);
 							}
 
-							// Only push the assistant message if streaming wasn't stopped
 							if (this.isStreaming) {
 								this.messages.push({
 									role: "assistant",
@@ -241,18 +228,19 @@ export class ChatbotView extends ItemView {
 						} catch (error) {
 							console.error("Error fetching response:", error);
 							if (this.isStreaming) {
-								// Only show error message if not manually stopped
-								thinkingMessage.innerHTML = md.render(
-									"Sorry, there was an error processing your request."
+								thinkingMessage.empty();
+								await MarkdownRenderer.render(
+									this.app,
+									"Sorry, there was an error processing your request.",
+									thinkingMessage,
+									"",
+									this
 								);
 								messageContainer.scrollTop =
 									messageContainer.scrollHeight;
-								thinkingMessage.classList.remove(
-									"animated-dots"
-								);
 							}
 						} finally {
-							this.isStreaming = false; // Reset streaming status
+							this.isStreaming = false;
 						}
 					}
 				}
@@ -265,13 +253,15 @@ export class ChatbotView extends ItemView {
 		sender: string,
 		text: string
 	): HTMLDivElement {
-		const messageEl = container.createDiv({
+		const messageEl = container.createEl("div", {
 			cls: "journal-chat-message",
 		});
-		const md = new Remarkable();
-		const htmlContent = md.render(text);
-		const messageContent = messageEl.createDiv();
-		messageContent.innerHTML = htmlContent;
+		
+		const messageContent = messageEl.createEl("div");
+		const component = new Component();
+		this.addChild(component);
+
+		MarkdownRenderer.render(this.app, text, messageContent, "", component);
 
 		container.scrollTop = container.scrollHeight;
 

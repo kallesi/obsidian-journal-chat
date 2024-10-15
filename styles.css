@@ -16,7 +16,6 @@
     border-radius: 5px;
     color: white;
     user-select: text;
-    /* Allow text selection */
 }
 
 .journal-chat-message strong {
@@ -52,6 +51,7 @@
     box-sizing: border-box;
     background-color: transparent;
     margin-bottom: 30px;
+    color: white;
 }
 
 .journal-chat-stop-button {
@@ -60,9 +60,13 @@
     border-radius: 5px;
     cursor: pointer;
     margin-bottom: 30px;
+    background-color: #444;
+    color: white;
+    border: none;
 }
 
 .journal-chat-suggestion-box {
+    display: none;
     position: absolute;
     bottom: 70px;
     left: 10px;
@@ -74,8 +78,10 @@
     max-height: 150px;
     overflow-y: auto;
     padding: 5px;
-    display: none;
-    /* Hidden by default */
+}
+
+.journal-chat-suggestion-box.visible {
+    display: block;
 }
 
 .journal-chat-suggestion-item {
@@ -89,13 +95,11 @@
 }
 
 .animated-dots::after {
-    content: " ";
+    content: "";
     display: inline-block;
     width: 2em;
-    /* Fixed width */
     text-align: left;
-    /* Align dots to the left */
-    animation: dots 1s steps(4, end) infinite;
+    animation: dots 1.5s steps(4, end) infinite;
 }
 
 @keyframes dots {
