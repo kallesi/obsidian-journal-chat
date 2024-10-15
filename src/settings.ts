@@ -105,6 +105,7 @@ Example: \`What was my life like during this period?\`
 
 - \`/clear /c\` - Clear chat and context
 - \`/stop\` - Stop generating response
+- \`/model\` - Change Ollama model
 `;
 
 		const description = containerEl.createDiv();
